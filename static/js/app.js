@@ -14,8 +14,6 @@ function buildMetadata(sample) {
       console.log(row.textContent)
     })
   })
-    // Hint: Inside the loop, you will need to use d3 to append new
-    // tags for each key-value in the metadata.
 
     // BONUS: Build the Gauge Chart
     // buildGauge(data.WFREQ);
@@ -29,7 +27,6 @@ function buildCharts(sample) {
   var ids = []
   var lbls = []
   var svals = []
-  var PIE = document.getElementById("pie");
 
   //create the function with which we will sort resulting data
   function compare(a,b) {
@@ -43,13 +40,14 @@ function buildCharts(sample) {
     return comparison;
   }
 
+  var sortArray = [];
+  var topTen = [];
   // @TODO: Use `d3.json` to fetch the sample data for the plots
   d3.json(url).then((sampleInfo) => {
-    // @TODO: Build a Bubble Chart using the sample data
     ids = sampleInfo.otu_ids;
     lbls = sampleInfo.otu_labels;
     svals = sampleInfo.sample_values;
-    sortArray = [];
+    console.log(sampleInfo)
 
     //Make an array of dicts to use sort(compare) on
     for (var counter = 0; counter < ids.length; counter++){
@@ -58,16 +56,58 @@ function buildCharts(sample) {
         "otulabel": lbls[counter],
         "sampleVal":svals[counter]
       })
-    }
+    };
     //sort the array to get the top sample values in the beginning
-    sortArray.sort(compare)
-    console.log(sortArray)
-  })
-  
+    sortArray.sort(compare);
+    topTen = sortArray.slice(0,10);
+    console.log(topTen);
 
-    // @TODO: Build a Pie Chart
-    // HINT: You will need to use slice() to grab the top 10 sample_values,
-    // otu_ids, and labels (10 each).
+  // @TODO: Build a Bubble Chart using the sample data
+  // @TODO: Build a Pie Chart
+
+  var PIE = document.getElementById("pie");
+  var BUBBLE = document.getElementById("bubble");
+
+  //make bubble trace
+  var bubbleTrace = {
+    x: ids,
+    y: svals,
+    text: lbls,
+    mode: 'markers',
+    marker: {
+      size: svals,
+      color: ids
+    }
+  };
+  //make bubble layout
+  var bubbleLayout = {
+    title: "OTU Sample Values per ID",
+    showlegend: false
+  };
+  //plot the bubble plot
+  Plotly.newPlot(BUBBLE, [bubbleTrace], bubbleLayout);
+
+  //make Pie trace
+  var toplabels = topTen.map(data => data.otuID);
+  var topValues = topTen.map(data => data.sampleVal);
+  var hovertext = topTen.map(data => data.otulabel);
+  console.log(toplabels)
+  console.log(topValues)
+  console.log(hovertext)
+  var pieTrace = {
+    values: topValues,
+    labels: toplabels,
+    hovertext: hovertext,
+    type: 'pie'
+  }
+  //make pie layout
+  var pieLayout = {
+    title: "Top Ten Samples"
+  }
+  //plot pie chart
+  Plotly.newPlot(PIE, [pieTrace], pieLayout)
+  //end of d3.json.then
+  })
 }
 
 function init() {
